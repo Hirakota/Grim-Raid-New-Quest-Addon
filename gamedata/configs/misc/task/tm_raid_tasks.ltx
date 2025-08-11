@@ -174,7 +174,7 @@ descr_functor = raid_task_kill_stalker_and_delivery_out_target_functor
 target_functor = raid_task_kill_stalker_and_delivery_out_target_functor
 status_functor = raid_task_kill_stalker_and_delivery_out_status_functor
 
-[raid_general_task_rf_scout_and_delivery_out]		; kill stalker npc and deliver out
+[raid_general_task_rf_scout_and_delivery_out]		; rf scout and deliver out
 icon = ui_icon_news_trx_death_report
 prior = 20
 storyline = false
@@ -183,6 +183,16 @@ title_functor = raid_task_rf_scout_and_delivery_out_target_functor
 descr_functor = raid_task_rf_scout_and_delivery_out_target_functor
 target_functor = raid_task_rf_scout_and_delivery_out_target_functor
 status_functor = raid_task_rf_scout_and_delivery_out_status_functor
+
+[raid_general_task_anomaly_scan]		; anomaly scan
+icon = ui_icon_news_trx_death_report
+prior = 20
+storyline = false
+
+title_functor = raid_task_anomaly_scan_target_functor
+descr_functor = raid_task_anomaly_scan_target_functor
+target_functor = raid_task_anomaly_scan_target_functor
+status_functor = raid_task_anomaly_scan_status_functor
 
 
 ; ============================================
@@ -204,6 +214,8 @@ status_functor = raid_task_rf_scout_and_delivery_out_status_functor
 [stalker_raid_task_find_artefact]:raid_general_task_find_artefact
 [stalker_raid_task_kill_stalker_and_delivery_out]:raid_general_task_kill_stalker_and_delivery_out
 [stalker_raid_task_rf_scout_and_delivery_out]:raid_general_task_rf_scout_and_delivery_out
+[stalker_raid_task_anomaly_scan]:raid_general_task_anomaly_scan
+
 
 ; ============================================
 ; ==================== Duty ====================
@@ -225,6 +237,7 @@ status_functor = raid_task_rf_scout_and_delivery_out_status_functor
 [duty_raid_task_find_artefact]:raid_general_task_find_artefact
 [duty_raid_task_kill_stalker_and_delivery_out]:raid_general_task_kill_stalker_and_delivery_out
 [duty_raid_task_rf_scout_and_delivery_out]:raid_general_task_rf_scout_and_delivery_out
+[duty_raid_task_anomaly_scan]:raid_general_task_anomaly_scan
 
 
 ; ============================================
@@ -246,6 +259,7 @@ status_functor = raid_task_rf_scout_and_delivery_out_status_functor
 [freedom_raid_task_find_artefact]:raid_general_task_find_artefact
 [freedom_raid_task_kill_stalker_and_delivery_out]:raid_general_task_kill_stalker_and_delivery_out
 [freedom_raid_task_rf_scout_and_delivery_out]:raid_general_task_rf_scout_and_delivery_out
+[freedom_raid_task_anomaly_scan]:raid_general_task_anomaly_scan
 
 
 
@@ -263,6 +277,7 @@ status_functor = raid_task_rf_scout_and_delivery_out_status_functor
 [ecolog_raid_task_find_outfit]:raid_general_task_find_outfit
 [ecolog_raid_task_find_artefact]:raid_general_task_find_artefact
 [ecolog_raid_task_rf_scout_and_delivery_out]:raid_general_task_rf_scout_and_delivery_out
+[ecolog_raid_task_anomaly_scan]:raid_general_task_anomaly_scan
 
 
 

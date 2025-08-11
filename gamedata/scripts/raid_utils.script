@@ -85,6 +85,28 @@ function find_random_stash(level_name, busy_check)
 	return stashes_ar[math.random(1, #stashes_ar)]
 end
 
+function find_random_anomaly(level_name)
+	local anomaly_ar = {}
+	for i = 1, 65534 do
+		local se_obj = alife_object(i)
+		if se_obj and IsAnomaly(se_obj) then
+			local anomaly_lid = game_graph():vertex(se_obj.m_game_vertex_id):level_id()
+			local anomaly_lname = anomaly_lid and alife():level_name(anomaly_lid)
+			if anomaly_lname and (anomaly_lname == level_name) then
+				printf('anomaly id: %s', se_obj.id)
+				anomaly_ar[#anomaly_ar + 1] = se_obj.id
+			end
+		end
+	end
+
+	if #anomaly_ar <= 0 then
+		printf("! [Raid] No anomalies found on this location")
+		return
+	end
+
+	return anomaly_ar[math.random(1, #anomaly_ar)]
+end
+
 function find_random_smart(level_name, busy_check, smart_amounts, item_spawn_check)
 	local smarts_t = {}
 --	printf("raid_utils.find_random_smart()")
@@ -846,7 +868,6 @@ function get_raid_task_title(task_id, stage, stage_max, special)
 	if string.find(task_data.typ, "rf_scout_and_delivery_out") or false then 
 		local freq = task_data.target_freq
 
-		printf("TASK IS RF_COUT TITLE WILL BE changed stage: %s", stage)
 		return strformat(gt("st_raid_task_" .. task_data.typ) .. hours_left_str, freq)
 	end
 

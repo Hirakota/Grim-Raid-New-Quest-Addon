@@ -12,6 +12,12 @@
 	<string id="rf_scout_and_delivery_out_task_update">
         <text>Место с предметом обнаружено</text>
     </string>
+	<string id="anomaly_scan_task_far_away_info">
+        <text>Невозможно установить, нужно подойти поближе</text>
+    </string>
+	<string id="anomaly_scan_task_update">
+        <text>Отлично забирай сканер и тащи его на базу</text>
+    </string>
 	
 
 	<!-- task titles -->
@@ -123,6 +129,9 @@
 	<string id="st_raid_task_rf_scout_and_delivery_out">
 		<text>Узнать где находится предмет (частота %s MHz) и доставить предмет (из места)</text>
 	</string>
+	<string id="st_raid_task_anomaly_scan">
+		<text>Просканировать аномальную активность вблизи аномалии и вернуться со сканером</text>
+	</string>
 	<string id="st_raid_task_delivery_out_world">
 		<text>Доставка предмета (из места)</text>
 	</string>
@@ -181,6 +190,9 @@
 	<string id="st_raid_task_rf_scout_and_delivery_out_stalker_descr">
 		<text>(ТРЕБУЕТСЯ RF-ресивер) Разведать местонахождение предмета и принести от (сталкер)</text>
 	</string>
+	<string id="st_raid_task_anomaly_scan_stalker_descr">
+		<text>Просканировать аномальную активность</text>
+	</string>
 	<string id="st_raid_task_delivery_out_world_stalker_descr">
 		<text>Мой подопечный придурок выронил шмотье пока удирал от мутантов. Это конечно будет чудо, если оно ещё там. Найдешь и принесешь - я хорошо тебе заплачу. Берёшься?</text>
 	</string>
@@ -237,6 +249,9 @@
 	</string>
 	<string id="st_raid_task_rf_scout_and_delivery_out_duty_descr">
 		<text>(ТРЕБУЕТСЯ RF-ресивер) Разведать местонахождение предмета и принести от (долг)</text>
+	</string>
+	<string id="st_raid_task_anomaly_scan_duty_descr">
+		<text>Просканировать аномальную активность и вернуться со сканером</text>
 	</string>
 	<string id="st_raid_task_delivery_out_world_duty_descr">
 		<text>На связи, %s. Есть информация, что отряд военных потерял курьера в рейде. Загнали его, походу, и схрумкали.. Военные будут признательны, если мы им вернём этот груз. Так что сделай одолжение, сходи на место и погляди, что там можно найти. Если найдешь что-то - тащи сюда, в убежище, дальше Шустрый знает что делать.</text>
@@ -295,6 +310,9 @@
 	<string id="st_raid_task_rf_scout_and_delivery_out_freedom_descr">
 		<text>(ТРЕБУЕТСЯ RF-ресивер) Разведать местонахождение предмета и принести от (свобода)</text>
 	</string>
+	<string id="st_raid_task_anomaly_scan_freedom_descr">
+		<text>Просканировать аномальную активность и вернуться со сканером</text>
+	</string>
 	<string id="st_raid_task_delivery_out_world_freedom_descr">
 		<text>Салют, %s! Яйцеголовые просрали какую-то важную хреновину в полях. Уж не знаю, валяется она там до сих пор или как, но если метнёшься кабанчиком и поищешь - оформлю тебе премиальные!</text>
 	</string>
@@ -351,6 +369,9 @@
 	</string>
 	<string id="st_raid_task_rf_scout_and_delivery_out_ecolog_descr">
 		<text>(ТРЕБУЕТСЯ RF-ресивер) Разведать местонахождение предмета и принести от (ученые)</text>
+	</string>
+	<string id="st_raid_task_anomaly_scan_ecolog_descr">
+		<text>Просканировать аномальную активность и вернуться со сканером</text>
 	</string>
 	<string id="st_raid_task_delivery_mines_ecolog_descr">
 		<text>Ох, %s, это Вы.. Знаете, с каждым днем в Зоне мутанты становятся все активнее. Военные уже пожимают плечами: им не хватает боекомплекта для прикрытия всех групп. Но мы нашли выход: противопехотые мины. Мы рассчитываем траекторию движения мутантов а потом заносим в общую сеть данные о минных полях. Сделайте доброе дело, заминируйте звериную тропу?</text>
@@ -460,6 +481,9 @@
 	</string>
 	<string id="st_raid_task_rf_scout_and_delivery_out_short_descr">
 		<text>Узнать где находится предмет (частота %s MHz) и доставить предмет (из места)</text>
+	</string>
+	<string id="st_raid_task_anomaly_scan_short_descr">
+		<text>Просканировать аномальную активность и вернуться со сканером</text>
 	</string>
 	<string id="st_raid_task_delivery_out_world_short_descr">
 		<text>Доставка предмета из указанного места (локация)</text>

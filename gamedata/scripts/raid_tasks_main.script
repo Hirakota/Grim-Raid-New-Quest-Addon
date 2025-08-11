@@ -352,11 +352,12 @@ function end_raid_task(task_id, mode, reward)
 	-- release item in "delivery"
 	local in_cond = string.find(task_id, "delivery_in") and raid_active_tasks[task_id].item_id
 	local out_cond = string.find(task_id, "delivery_out")
+	local scan_cond = string.find(task_id, "anomaly_scan")
 	-- local k_out_cond = string.find(task_id, "kill_stalker_and_delivery_out")
 	-- local rf_out_cond = string.find(task_id, "rf_scout_and_delivery_out")
 	local out_world_cond = string.find(task_id, "delivery_out_world")
 	local mines_cond = string.find(task_id, "delivery_mines") and raid_active_tasks[task_id].item_id
-	if out_cond or out_world_cond or mines_cond or k_out_cond or rf_out_cond then
+	if out_cond or out_world_cond or mines_cond or k_out_cond or rf_out_cond or scan_cond then
 		local item = alife_object(raid_active_tasks[task_id].item_id)
 		alife_release(item)
 	end
