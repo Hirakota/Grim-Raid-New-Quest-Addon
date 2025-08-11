@@ -123,7 +123,7 @@ informant_bonus_insurance_percent = raid_options_mcm.get_config("insurance_perce
 informant_bonus_sell_pda_min = 300
 informant_bonus_sell_pda_max = 2200
 informant_bonus_raid_time = 10
-~
+
 item_donation_koef = 2000		-- divider (cost/koef) = goodwill
 
 
