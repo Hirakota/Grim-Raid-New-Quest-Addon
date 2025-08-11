@@ -1,0 +1,161 @@
+local gt = game.translate_string
+local ltx = ini_file("misc\\task\\tm_raid_tasks.ltx")
+local ctime_to_t = utils_data.CTime_to_table
+local t_to_ctime = utils_data.CTime_from_table
+
+local delivery_sec_t = {		-- item indices
+	["in"] = { 1, 2, 3, 4, 5 },
+	["out"] = { 6, 7, 8, 9, 10, 11 },
+}
+
+
+-- ============================================
+-- ======== (1) RF Scout and delivery =========
+-- ============================================
+task_functor.raid_task_rf_scout_and_delivery_out_target_functor = function(task_id,field,p,tsk)
+	local active_t = raid_tasks_main.raid_active_tasks
+	local stage = tsk and tsk.stage
+
+	if (field == "title") then
+		return raid_utils.get_raid_task_title(task_id, stage, 5)
+	elseif (field == "descr") then
+		return raid_utils.get_raid_task_descr(task_id, stage, 5)
+	elseif (field == "target") and stage and stage > 0 and active_t[task_id] then
+		if (stage == 3 or stage == 4) then 
+			return active_t[task_id].item_id
+		end
+		return
+	end
+end
+
+task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = function(tsk,task_id)
+
+    local active_t = raid_tasks_main.raid_active_tasks
+	local cur_time = game.get_game_time()
+	local task_data = raid_tasks_main.get_task_data(task_id)
+	if not (task_data and tsk) then return end
+
+	if not tsk.stage then
+		tsk.stage = 0
+	end
+
+	if tsk.stage > 0 and not active_t[task_id] then
+		return
+	end
+
+--[[
+	0 = setup
+	1 = process
+	2 = completed setup delivery (0)
+	3 = taking process (1)
+	4 = quest item dropped (2)
+	5 = taken (3)
+--]]
+
+	-- setup
+	if tsk.stage == 0 then
+		active_t[task_id] = {}
+
+		-- store level and smarts table
+		active_t[task_id].level_name = task_data.level_name
+		active_t[task_id].smarts_t = {}
+
+		-- store type
+		active_t[task_id].typ = task_data.typ
+		active_t[task_id].target_freq = task_data.target_freq
+
+		-- collect and mark smarts
+		local smart_amounts = raid_simulation.raid_sim_t[task_data.level_name].level_tier * 1
+		local smarts_t = raid_utils.find_random_smart(task_data.level_name, nil, smart_amounts)
+		printf("scout level name: %s || smarts_amount: %s || smarts_table_size: %s", task_data.level_name, smart_amounts, size_table(smarts_t))
+		if smarts_t then
+			for sm_id, _ in pairs(smarts_t) do
+				printf("collect scout smarts, smart_id: %s", sm_id)
+				active_t[task_id].smarts_t[sm_id] = "active"		-- "scouted" when scouted
+				raid_tasks_scout.mark_smart(sm_id)
+			end
+		else
+			printf("! [Raid] Error in collection Scout smarts")
+		end
+
+		active_t[task_id].scouted = 0
+		active_t[task_id].amount = size_table(smarts_t)
+
+		-- set timer
+		active_t[task_id].start_time = ctime_to_t(cur_time)
+
+		tsk.stage = 1
+		return		-- next update just in case
+	end
+
+	if tsk.stage == 1 and active_t[task_id].scouted == active_t[task_id].amount then
+		local str = strformat(gt("rf_scout_and_delivery_out_task_update"), ui_options.curr_player_name())
+		news_manager.send_tip(db.actor, str, 3, nil, 5000)
+		tsk.stage = 2
+	end
+
+
+	-- if tsk.stage == 2 then
+		-- if level.name() == raid_utils.raid_home_level then
+			-- raid_tasks_main.end_raid_task(task_id, "complete")
+		-- end
+		-- return
+	-- end
+	
+	-- setup delivery
+	if tsk.stage == 2 then
+		-- active_t[task_id] = {}
+
+		-- store level and stash
+		-- active_t[task_id].level_name = task_data.level_name
+		active_t[task_id].stash_id = raid_utils.find_random_stash(task_data.level_name, true) or "No stash id"
+		raid_tasks_main.raid_busy_stashes_t[active_t[task_id].stash_id] = true
+
+		-- spawn item in stash and store its id
+		local itm_ar = delivery_sec_t["out"]
+		local item_sec = "raid_delivery_item_" .. itm_ar[math.random(1, #itm_ar)]
+		local se_stash = alife_object(active_t[task_id].stash_id)
+
+		local item = alife_create_item(item_sec, se_stash)
+		active_t[task_id].item_sec = item_sec
+		active_t[task_id].item_id = item and item.id or "No item ID"
+
+		tsk.stage = 3
+		return		-- next update just in case
+	end
+
+	-- item taken delivery
+	if tsk.stage == 3 or tsk.stage == 4 then
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id == 0 then
+			tsk.stage = 5
+		end
+	end
+
+	-- item dropped delivery
+	if tsk.stage == 5 then
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id ~= 0 then
+			tsk.stage = 4
+		end
+	end
+
+
+	-- complete delivery
+	if tsk.stage == 5 then
+		if level.name() == raid_utils.raid_home_level then
+			raid_tasks_main.end_raid_task(task_id, "complete")
+		end
+		return
+	end
+
+	-- fail on timer
+	if task_data.urgent < 6 then
+		local hours = raid_tables.raid_urgency_time[task_data.urgent]
+		if cur_time:diffSec(t_to_ctime(active_t[task_id].start_time)) > (hours * 3600) then
+			raid_tasks_main.end_raid_task(task_id, "fail")
+			return
+		end
+	end
+
+end
