@@ -93,7 +93,6 @@ function find_random_anomaly(level_name)
 			local anomaly_lid = game_graph():vertex(se_obj.m_game_vertex_id):level_id()
 			local anomaly_lname = anomaly_lid and alife():level_name(anomaly_lid)
 			if anomaly_lname and (anomaly_lname == level_name) then
-				printf('anomaly id: %s', se_obj.id)
 				anomaly_ar[#anomaly_ar + 1] = se_obj.id
 			end
 		end
@@ -865,8 +864,10 @@ function get_raid_task_title(task_id, stage, stage_max, special)
 		return gt("st_raid_task_" .. task_data.typ .. "_short_descr") .. get_translated_group_string(task_data.group, task_data.typ) .. hours_left_str
 	end
 	
-	if string.find(task_data.typ, "rf_scout_and_delivery_out") or false then 
+	if string.find(task_data.typ, "rf_scout_and_delivery_out") or string.find(task_data.typ, "rf_find_and_delivery_out") or false then 
 		local freq = task_data.target_freq
+
+		printf("string title name: %s : %s", "st_raid_task_" .. task_data.typ, gt("st_raid_task_" .. task_data.typ))
 
 		return strformat(gt("st_raid_task_" .. task_data.typ) .. hours_left_str, freq)
 	end
@@ -1325,6 +1326,15 @@ function test_reward_func()
 		end
 	end
 
+end
+
+function isRfScanning(target_freq) 
+    local obj_det = db.actor:active_detector()
+	if not (obj_det and obj_det:section() == "detector_radio" and obj_det:condition() >= obj_det:power_critical()) then
+        printf('no item')
+		return false
+	end
+	return item_radio.get_freq() == target_freq
 end
 
 function on_game_start()

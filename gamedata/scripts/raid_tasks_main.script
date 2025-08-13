@@ -108,7 +108,7 @@ function generate_tasks()
 		end
 
 		local informant_bonus = HI(raid_notebook_gui.informant_options_ar[1].info) and raid_tables.informant_bonus_tasks_amount or 0		-- informant +tasks bonus
-		local tasks_amount = math.random(limits_t[key][1] + informant_bonus, limits_t[key][2] + informant_bonus) + 40;
+		local tasks_amount = math.random(limits_t[key][1] + informant_bonus, limits_t[key][2] + informant_bonus);
 
 
 		-- get all task sections from ltx for this comm except already picked tasks
@@ -197,7 +197,7 @@ function generate_tasks()
 				raid_tasks_t[comm]["tasks"][sec].level_name = level_name
 
 				-- store reciver freq
-				if task_sections[sec].typ == "rf_scout_and_delivery_out" then 
+				if task_sections[sec].typ == "rf_scout_and_delivery_out" or task_sections[sec].typ == "rf_find_and_delivery_out" then 
 					local freq = math.random(30, 300)
 					raid_tasks_t[comm]["tasks"][sec].target_freq = freq
 				end
@@ -351,13 +351,15 @@ function end_raid_task(task_id, mode, reward)
 
 	-- release item in "delivery"
 	local in_cond = string.find(task_id, "delivery_in") and raid_active_tasks[task_id].item_id
+	-- every task that include delivery_out 
 	local out_cond = string.find(task_id, "delivery_out")
 	local scan_cond = string.find(task_id, "anomaly_scan")
 	-- local k_out_cond = string.find(task_id, "kill_stalker_and_delivery_out")
 	-- local rf_out_cond = string.find(task_id, "rf_scout_and_delivery_out")
 	local out_world_cond = string.find(task_id, "delivery_out_world")
 	local mines_cond = string.find(task_id, "delivery_mines") and raid_active_tasks[task_id].item_id
-	if out_cond or out_world_cond or mines_cond or k_out_cond or rf_out_cond or scan_cond then
+
+	if scan_cond or out_cond or out_world_cond or mines_cond then
 		local item = alife_object(raid_active_tasks[task_id].item_id)
 		alife_release(item)
 	end

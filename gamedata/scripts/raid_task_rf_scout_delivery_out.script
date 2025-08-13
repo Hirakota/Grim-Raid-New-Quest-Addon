@@ -93,14 +93,6 @@ task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = functio
 		news_manager.send_tip(db.actor, str, 3, nil, 5000)
 		tsk.stage = 2
 	end
-
-
-	-- if tsk.stage == 2 then
-		-- if level.name() == raid_utils.raid_home_level then
-			-- raid_tasks_main.end_raid_task(task_id, "complete")
-		-- end
-		-- return
-	-- end
 	
 	-- setup delivery
 	if tsk.stage == 2 then

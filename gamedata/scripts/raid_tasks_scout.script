@@ -126,11 +126,8 @@ function actor_on_update()
 					local normal_check = dist_to < 30
 					local binoc_check = zoom_flag and dist_to < 150 and smart_in_viewport(smart)
 
-					printf("CHECK WITH RF %s", chech_with_rf_necessary)
-
 					if chech_with_rf_necessary then
-						print('rf checks: %s %s', normal_check, scanning(active_t[task_id].target_freq))
-						if normal_check and scanning(active_t[task_id].target_freq) then 
+						if normal_check and raid_utils.isRfScanning(active_t[task_id].target_freq) then 
 							active_t[task_id].smarts_t[sm_id] = "scouted"
 							active_t[task_id].scouted = active_t[task_id].scouted + 1
 							unmark_smart(sm_id)
@@ -151,15 +148,6 @@ function actor_on_update()
 		end
 	end
 
-end
-
-function scanning(target_freq) 
-    local obj_det = db.actor:active_detector()
-	if not (obj_det and obj_det:section() == "detector_radio" and obj_det:condition() >= obj_det:power_critical()) then
-        printf('no item')
-		return false
-	end
-	return item_radio.get_freq() == target_freq
 end
 
 function mark_smart(id)

@@ -5,7 +5,7 @@ local t_to_ctime = utils_data.CTime_from_table
 
 
 -- ============================================
--- ===== (1) Anomaly Scaning by Hirakota ======
+-- =========== (1) Anomaly Scaning ============
 -- ============================================
 task_functor.raid_task_anomaly_scan_target_functor = function(task_id,field,p,tsk)
 	local active_t = raid_tasks_main.raid_active_tasks
@@ -16,7 +16,7 @@ task_functor.raid_task_anomaly_scan_target_functor = function(task_id,field,p,ts
 	elseif (field == "descr") then
 		return raid_utils.get_raid_task_descr(task_id, stage, 5)
 	elseif (field == "target") and stage and stage > 0 and active_t[task_id] then
-		if stage == 1 or stage == 2 or stage == 3 then 
+		if stage >= 1 and stage <= 3 then 
 			return active_t[task_id].smart_id
 		end
         if stage == 4 or stage == 5 then 
@@ -80,6 +80,7 @@ task_status_functor.raid_task_anomaly_scan_status_functor = function(tsk,task_id
     end
 	if tsk.stage == 1 and active_t[task_id].anomaly_scanner_placed then
         active_t[task_id].anomaly_scanner_placed_time = ctime_to_t(cur_time);
+        active_t[task_id].time_to_scan = math.random(60, 200);
 		tsk.stage = 2
         return
 	end
@@ -88,7 +89,7 @@ task_status_functor.raid_task_anomaly_scan_status_functor = function(tsk,task_id
     if tsk.stage == 2 then
         printf('time passed: %s', cur_time:diffSec(t_to_ctime(active_t[task_id].anomaly_scanner_placed_time)));
     end
-    if tsk.stage == 2 and (cur_time:diffSec(t_to_ctime(active_t[task_id].anomaly_scanner_placed_time)) > (200)) then 
+    if tsk.stage == 2 and (cur_time:diffSec(t_to_ctime(active_t[task_id].anomaly_scanner_placed_time)) > (active_t[task_id].time_to_scan)) then 
         local str = strformat(gt("anomaly_scan_task_update"), ui_options.curr_player_name())
 		news_manager.send_tip(db.actor, str, 3, nil, 5000)
         tsk.stage = 3

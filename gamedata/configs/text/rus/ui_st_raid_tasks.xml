@@ -651,4 +651,50 @@
 		<text>Сторонние заказчики</text>
 	</string>
 
+
+
+
+	<!-- RF FIND AND DELIVERY OUT ** QUST RELATED TEXT -->
+	<!-- Task-related messages (updates, additional info) -->
+	<string id="rf_find_and_delivery_out_task_update">
+        <text>Место с предметом обнаружено</text>
+    </string>
+
+	<!-- task types -->
+	<string id="st_raid_task_rf_find_and_delivery_out">
+		<text>Найти и доставить потеряную посылку (частота %s MHz)</text>
+	</string>
+
+	<!-- task long descr -->
+		<!-- stalker -->
+	<string id="st_raid_task_rf_find_and_delivery_out_stalker_descr">
+		<text>(ТРЕБУЕТСЯ RF-ресивер) Найти потеряную посылку (сталкер)</text>
+	</string>
+
+		<!-- duty -->
+	<string id="st_raid_task_rf_find_and_delivery_out_duty_descr">
+		<text>(ТРЕБУЕТСЯ RF-ресивер) Найти потеряную посылку (долг)</text>
+	</string>
+
+		<!-- freedom -->
+	<string id="st_raid_task_rf_find_and_delivery_out_freedom_descr">
+		<text>(ТРЕБУЕТСЯ RF-ресивер) Найти потеряную посылку (свобода)</text>
+	</string>
+
+		<!-- ecolog -->
+	<string id="st_raid_task_rf_find_and_delivery_out_ecolog_descr">
+		<text>(ТРЕБУЕТСЯ RF-ресивер) Найти потеряную посылку (ученые)</text>
+	</string>
+
+		<!-- other -->
+    <string id="st_raid_task_rf_find_and_delivery_out_other_descr">
+		<text>(ТРЕБУЕТСЯ RF-ресивер) Найти потеряную посылку (no data)</text>
+	</string>
+
+	<!-- task short descr -->
+	<string id="st_raid_task_rf_find_and_delivery_out_short_descr">
+		<text>Найти и доставить потеряную посылку (частота %s MHz)</text>
+	</string>
+
+
 </string_table>

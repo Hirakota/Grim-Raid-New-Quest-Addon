@@ -334,7 +334,7 @@ task_reward_mults = {
 	["delivery_in"] = 0.95,	["delivery_out"] = 1.1,		["delivery_out_world"] = 1.05,	["delivery_mines"] = 1,
 	["scout"] = 1.2,		["kill_stalker"] = 1.6,	["kill_stalker_squad"] = 2.45,		["kill_mutant_squad"] = 2.20,
 	["guide"] = 1.9,		["evacuation"] = 2.3,		["kill_strong_stalker_squad"] = 3.35,		["kill_strong_mutant_squad"] = 3.15,
-	["kill_stalker_and_delivery_out"] = 2.9, ["rf_scout_and_delivery_out"] = 2.5, ["anomaly_scan"] = 1.9,
+	["kill_stalker_and_delivery_out"] = 2.9, ["rf_scout_and_delivery_out"] = 2.5, ["rf_find_and_delivery_out"] = 3.3, ["anomaly_scan"] = 1.9,
 }
 
 --v0.8.7
@@ -383,7 +383,7 @@ task_minmax_tiers = {
 	["kill_stalker_squad"] = {1, 3}, 	["kill_mutant_squad"] = {1, 3},		["guide"] = {1, 3},
 	["evacuation"] = {1, 3},		["find_weapon"] = {2, 2},		["find_outfit"] = {2, 2},
 	["find_artefact"] = {2, 3},		["kill_strong_stalker_squad"] = {3, 3}, 		["kill_strong_mutant_squad"] = {3, 3},
-	["kill_stalker_and_delivery_out"] = {1, 3}, ["rf_scout_and_delivery_out"] = {1, 3}, ["anomaly_scan"] = {1, 3},
+	["kill_stalker_and_delivery_out"] = {1, 3}, ["rf_scout_and_delivery_out"] = {1, 3}, ["rf_find_and_delivery_out"] = {1, 3}, ["anomaly_scan"] = {1, 3},
 }
 
 
@@ -395,7 +395,8 @@ task_minmax_tiers = {
 task_urgency = {
     ["delivery_in"] = 3,    ["delivery_out"] = 2,    ["delivery_out_world"] = 2,    ["delivery_mines"] = 3,    ["scout"] = 3,    ["kill_stalker"] = 2,    ["kill_stalker_squad"] = 2,
     ["kill_mutant_squad"] = 2,    ["guide"] = 3,    ["evacuation"] = 1,        ["find_weapon"] = 2,        ["find_outfit"] = 2,        ["find_artefact"] = 2,
-    ["kill_strong_stalker_squad"] = 3,     ["kill_strong_mutant_squad"] = 3, ["kill_stalker_and_delivery_out"] = 2, ["rf_scout_and_delivery_out"] = 2, ["anomaly_scan"] = 3,
+    ["kill_strong_stalker_squad"] = 3,     ["kill_strong_mutant_squad"] = 3, ["kill_stalker_and_delivery_out"] = 2, ["rf_scout_and_delivery_out"] = 2, ["rf_find_and_delivery_out"] = 2, 
+	["anomaly_scan"] = 3,
 }
 
 -- money urgency-multiplier
