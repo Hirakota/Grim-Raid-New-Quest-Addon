@@ -16,16 +16,20 @@ task_functor.raid_task_anomaly_scan_target_functor = function(task_id,field,p,ts
 	elseif (field == "descr") then
 		return raid_utils.get_raid_task_descr(task_id, stage, 5)
 	elseif (field == "target") and stage and stage > 0 and active_t[task_id] then
-		if stage >= 1 and stage <= 3 then 
-			return active_t[task_id].smart_id
-		end
-        if stage == 4 or stage == 5 then 
-			return active_t[task_id].item_id
+
+		local item = active_t[task_id].item_id;
+		local anomaly = active_t[task_id].smart_id
+
+		if stage == 1 or stage == 4 then 
+			return item
+		elseif stage == 2 then
+			return anomaly
 		end
 	end
 end
 
 task_status_functor.raid_task_anomaly_scan_status_functor = function(tsk,task_id)
+	printf("raid_task_anomaly_scan_status_functor stage: %s", tsk.stage);
     local active_t = raid_tasks_main.raid_active_tasks
 	local cur_time = game.get_game_time()
 	local task_data = raid_tasks_main.get_task_data(task_id)
@@ -43,12 +47,11 @@ task_status_functor.raid_task_anomaly_scan_status_functor = function(tsk,task_id
 
 --[[
 	0 = setup
-	1 = delivering process and placement
-    2 = time pass
-    3 = pick up scanner
+	1 = pickup scanner
+    2 = check if dropped near anomaly
+    3 = check if time passed or picked up to early
     4 = delivery out
-    5 = dropper take scanner
-	6 = completed
+    5 = dropper take scanner or complete quest
 --]]
 
 	-- setup
@@ -74,72 +77,78 @@ task_status_functor.raid_task_anomaly_scan_status_functor = function(tsk,task_id
 		return		-- next update just in case
 	end
 
-    -- delivering process and placement 
-    if tsk.stage == 1 then
-        printf("scanner placed: %s", active_t[task_id].anomaly_scanner_placed)
-    end
-	if tsk.stage == 1 and active_t[task_id].anomaly_scanner_placed then
-        active_t[task_id].anomaly_scanner_placed_time = ctime_to_t(cur_time);
-        active_t[task_id].time_to_scan = math.random(60, 200);
-		tsk.stage = 2
-        return
-	end
-
-    -- check if time passed 
-    if tsk.stage == 2 then
-        printf('time passed: %s', cur_time:diffSec(t_to_ctime(active_t[task_id].anomaly_scanner_placed_time)));
-    end
-    if tsk.stage == 2 and (cur_time:diffSec(t_to_ctime(active_t[task_id].anomaly_scanner_placed_time)) > (active_t[task_id].time_to_scan)) then 
-        local str = strformat(gt("anomaly_scan_task_update"), ui_options.curr_player_name())
-		news_manager.send_tip(db.actor, str, 3, nil, 5000)
-        tsk.stage = 3
-    end
-
     -- pick up scanner
-    if tsk.stage == 3 then
-        local anomaly = alife_object(active_t[task_id].smart_id)
-
-        if anomaly and not (db.actor:position():distance_to(anomaly.position) < 15) then
-            -- message that scanner is far away
-            return
-        end
-
-        -- pick up logic
-        local item_sec = "raid_anomaly_scanner"
-		local item = alife_create_item(item_sec, db.actor)
-		active_t[task_id].item_id = item and item.id or "No item ID"
-		active_t[task_id].anomaly_scanned = true
-        tsk.stage = 4
-
-        return
-    end
-
-    -- item taken
-	if tsk.stage == 4 or tsk.stage == 5 then
+    if tsk.stage == 1 then
 		local item = alife_object(active_t[task_id].item_id)
 		if item and item.parent_id and item.parent_id == 0 then
-			tsk.stage = 6
+			tsk.stage = 2
 		end
-	end
+        return
+    end
 
-	-- item dropped
-	if tsk.stage == 6 then
+	-- dropped check
+	if tsk.stage == 2 then
 		local item = alife_object(active_t[task_id].item_id)
 		if item and item.parent_id and item.parent_id ~= 0 then
+			local anomaly = alife_object(active_t[task_id].smart_id)
+			if db.actor:position():distance_to(anomaly.position) < 15 then 
+				-- droped near anomaly
+				active_t[task_id].anomaly_scanner_placed_time = ctime_to_t(cur_time);
+        		active_t[task_id].time_to_scan = math.random(60, 200);
+				tsk.stage = 3
+			else 
+				-- if dropped far away pick it up
+				tsk.stage = 1
+			end
+		end
+		return
+	end
+
+	if tsk.stage == 3 then
+		-- check if picked up to early
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id == 0 then
+			tsk.stage = 2
+			return
+		end
+		-- check if tipe passed
+		if (cur_time:diffSec(t_to_ctime(active_t[task_id].anomaly_scanner_placed_time)) > (active_t[task_id].time_to_scan)) then
+			local str = strformat(gt("anomaly_scan_task_update"), ui_options.curr_player_name())
+			news_manager.send_tip(db.actor, str, 3, nil, 5000)
+			tsk.stage = 4
+		end
+		return
+	end
+
+    -- pick up scanner
+    if tsk.stage == 4 then
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id == 0 then
 			tsk.stage = 5
+		else
+			return
+		end
+    end
+
+	-- item dropped
+	if tsk.stage == 5 then
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id ~= 0 then
+			tsk.stage = 4
+			return
 		end
 	end
 
 	-- complete
-	if tsk.stage == 6 then
-		if level.name() == raid_utils.raid_home_level and active_t[task_id].anomaly_scanned then
+	if tsk.stage == 5 then
+		if level.name() == raid_utils.raid_home_level then
 			raid_tasks_main.end_raid_task(task_id, "complete")
 		end
 		return
 	end
 
 	-- fail on timer
-	if task_data.urgent < 6 then
+	if task_data.urgent < 9 then
 		local hours = raid_tables.raid_urgency_time[task_data.urgent]
 		if cur_time:diffSec(t_to_ctime(active_t[task_id].start_time)) > (hours * 3600) then
 			raid_tasks_main.end_raid_task(task_id, "fail")
@@ -147,60 +156,4 @@ task_status_functor.raid_task_anomaly_scan_status_functor = function(tsk,task_id
 		end
 	end
 
-end
-
-
-function get_anomaly_scanner_info(obj_id)
-	local active_t = raid_tasks_main.raid_active_tasks
-	for task_id, t in pairs(active_t) do
-		if string.find(task_id, "anomaly_scan") and t.item_id == obj_id then
-			return { task_id, t.smart_id }
-		end
-	end
-end
-
-function menu_anomaly_scanner(obj)
-	local p = obj:parent()
-	if not (p and p:id() == AC_ID) then return end
-	return gt("Place scanner")
-end
-
-function func_anomaly_scanner(obj)
-	local active_t = raid_tasks_main.raid_active_tasks
-	local p = obj:parent()
-	if not (p and p:id() == AC_ID) then return end
-
-	local task_id = get_anomaly_scanner_info(obj:id())[1]
-	local smart_id = get_anomaly_scanner_info(obj:id())[2]
-	local anomaly = alife_object(smart_id)
-
-	if anomaly and db.actor:position():distance_to(anomaly.position) < 15 then
-		active_t[task_id].anomaly_scanner_placed = true
-		alife_release(obj)
-		active_t[task_id].item_id = nil
-		-- hirakota message about anomaly scanner placed
-    else 
-        -- need to come closer
-        local str = gt("anomaly_scan_task_far_away_info")
-		news_manager.send_tip(db.actor, str, 3, nil, 2000)
-    end
-end
-
-Default_name_custom = ui_inventory.UIInventory.Name_Custom
-function ui_inventory.UIInventory:Name_Custom(obj, bag, temp, i)
-	obj = self:CheckItem(obj,"Name_Custom " .. i)
-	if i == 9 and get_anomaly_scanner_info(obj:id()) then
-		return menu_anomaly_scanner(obj)
-	end
-	return Default_name_custom(self, obj, bag, temp, i)
-end
-
-Default_action_custom = ui_inventory.UIInventory.Action_Custom
-function ui_inventory.UIInventory:Action_Custom(obj, bag, temp, i)
-	obj = self:CheckItem(obj,"Action_Custom " .. i)
-	if i == 9 and get_anomaly_scanner_info(obj:id()) then
-		func_anomaly_scanner(obj)
-		return
-	end
-	Default_action_custom(self, obj, bag, temp, i)
 end
