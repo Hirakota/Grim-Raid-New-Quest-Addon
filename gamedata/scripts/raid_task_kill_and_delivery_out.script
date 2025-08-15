@@ -25,11 +25,11 @@ task_functor.raid_task_kill_stalker_and_delivery_out_target_functor = function(t
 			local se_obj = alife_object(active_t[task_id].stalker_id)
 			return se_obj and se_obj.alive and se_obj:alive() and se_obj.id
 		end
-        if (tsk.stage == 7 or tsk.stage == 8) then
-			return active_t[task_id].item_id
-		end
 		if tsk.stage == 5 then
 			return active_t[task_id].pick_up_item_id
+		end
+        if (tsk.stage == 7 or tsk.stage == 8) then
+			return active_t[task_id].item_id
 		end
 	end
 end
@@ -125,7 +125,7 @@ task_status_functor.raid_task_kill_stalker_and_delivery_out_status_functor = fun
 	end
 
 	-- fail on return without killing
-	if tsk.stage <= 7 and level.name() == raid_utils.raid_home_level then
+	if tsk.stage >= 2 and tsk.stage < 6 and level.name() == raid_utils.raid_home_level then
 		raid_tasks_main.end_raid_task(task_id, "fail")
 		return
 	end
