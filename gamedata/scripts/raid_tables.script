@@ -109,7 +109,7 @@ task_reset_cooldown = 36000		-- game seconds between task resets
 base_task_money = 1000
 base_task_money_range = 1000	-- рандом +- к финальной стоимости награды
 base_task_rank = 14
-base_task_goodwill = 30
+base_task_goodwill = 10
 base_task_find_fail_goodwill = -10
 
 base_task_fail_goodwill = -35

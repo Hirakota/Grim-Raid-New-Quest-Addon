@@ -534,9 +534,9 @@ function get_task_reward(comm, task_t, special_reward)
 	local urgency_val = task_t.urgent < 4 and raid_tables.task_urgency_reward[task_t.urgent] or 0
 	local range_money = math.random(-raid_tables.base_task_money_range, raid_tables.base_task_money_range)
 	-- local money = raid_tables.base_task_money * (rew_mult + task_t.tier +  urgency_val) * scout_rew_mult + math.ceil(range_money)
-	local money = math.ceil(raid_tables.base_task_money * (rew_mult * 7 + ((task_t.tier + 0.5) ^ 2.75) + (urgency_val * task_t.tier)) + math.ceil(range_money))
+	local money = math.ceil(raid_tables.base_task_money * (rew_mult * (7+task_t.tier) + ((task_t.tier + 1.2) ^ 2.4) + (urgency_val * task_t.tier)) + math.ceil(range_money))
 	local rank = math.ceil(raid_tables.base_task_rank * rew_mult + (task_t.tier * 5))
-	local goodwill = raid_tables.base_task_goodwill * task_t.tier
+	local goodwill = math.ceil(raid_tables.base_task_goodwill * (rew_mult * (task_t.tier) ^ 1.4))
 	local goodwill_penalty
 	if comm == "other" then
 		money = math.floor(money * raid_tables.other_money_mult)
@@ -839,40 +839,50 @@ function get_reward_items_string(items_ar, main_item, for_details_wnd)
 end
 
 function get_raid_task_title(task_id, stage, stage_max, special)
-	local task_data = raid_tasks_main.get_task_data(task_id)
-	if not task_data then
-		return ""
-	end
+    local task_data = raid_tasks_main.get_task_data(task_id)
+    if not task_data then
+        return ""
+    end
 
-	if not (stage and stage_max) then
-		return gt(task_data.typ .. ": no stage error")
-	end
+    if not (stage and stage_max) then
+        return gt(task_data.typ .. ": no stage error")
+    end
 
-	if stage >= stage_max then
-		return gt("st_raid_task_" .. task_data.typ)
-	end
+    if stage >= stage_max then
+        return gt("st_raid_task_" .. task_data.typ)
+    end
 
-	local hours_left_str = ""
-	local max_time = task_data.urgent and raid_tables.raid_urgency_time[task_data.urgent]
-	local active_t = raid_tasks_main.raid_active_tasks[task_id]
-	if max_time and active_t and active_t.start_time then
-		local hours_passed = round(game.get_game_time():diffSec(t_to_ctime(active_t.start_time)) / 3600)
-		hours_left_str = "  [" .. max_time - hours_passed .. " " .. gt("st_raid_hours") .. "]"
-	end
+    local hours_left_str = ""
+    local max_time = task_data.urgent and raid_tables.raid_urgency_time[task_data.urgent]
+    local active_t = raid_tasks_main.raid_active_tasks[task_id]
+    if max_time and active_t and active_t.start_time then
+        local hours_passed = round(game.get_game_time():diffSec(t_to_ctime(active_t.start_time)) / 3600)
+        hours_left_str = "  [" .. max_time - hours_passed .. " " .. gt("st_raid_hours") .. "]"
+    end
 
-	if special and task_data.group then		-- find certain item tasks
-		return gt("st_raid_task_" .. task_data.typ .. "_short_descr") .. get_translated_group_string(task_data.group, task_data.typ) .. hours_left_str
-	end
-	
-	if string.find(task_data.typ, "rf_scout_and_delivery_out") or string.find(task_data.typ, "rf_find_and_delivery_out") or false then 
-		local freq = task_data.target_freq
+    local comm_name = "No Data"
+    for comm, t in pairs(raid_tasks_main.raid_tasks_t) do
+        if t.tasks[task_id] then
+            if t.name then
+                comm_name = gt(t.name)
+            end
+            break
+        end
+    end
+    
+    if special and task_data.group then        -- find certain item tasks
+        return gt("st_raid_task_" .. task_data.typ .. "_short_descr") .. get_translated_group_string(task_data.group, task_data.typ) .. hours_left_str .. "  [" .. comm_name .. "]"
+    end
+    
+    if string.find(task_data.typ, "rf_scout_and_delivery_out") or string.find(task_data.typ, "rf_find_and_delivery_out") or false then 
+        local freq = task_data.target_freq
 
-		printf("string title name: %s : %s", "st_raid_task_" .. task_data.typ, gt("st_raid_task_" .. task_data.typ))
+        --printf("string title name: %s : %s", "st_raid_task_" .. task_data.typ, gt("st_raid_task_" .. task_data.typ))
 
-		return strformat(gt("st_raid_task_" .. task_data.typ) .. hours_left_str, freq)
-	end
-
-	return gt("st_raid_task_" .. task_data.typ) .. hours_left_str
+        return strformat(gt("st_raid_task_" .. task_data.typ) .. hours_left_str, freq) .. "  [" .. comm_name .. "]  [" .. gt(task_data.level_name) .. "]"
+    end
+    
+    return gt("st_raid_task_" .. task_data.typ) .. hours_left_str .. "  [" .. comm_name .. "]  [" .. gt(task_data.level_name) .. "]"
 end
 
 function get_raid_task_descr(task_id, stage, stage_max, special)
