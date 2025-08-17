@@ -3,7 +3,10 @@ local ltx = ini_file("misc\\task\\tm_raid_tasks.ltx")
 local ctime_to_t = utils_data.CTime_to_table
 local t_to_ctime = utils_data.CTime_from_table
 
-local delivery_sec_t = {		-- item indices
+local tb_tg_scan = 0
+local tb_scan_time = 4000;
+
+local delivery_sec_t = { -- item indices
 	["in"] = { 1, 2, 3, 4, 5 },
 	["out"] = { 6, 7, 8, 9, 10, 11 },
 }
@@ -12,7 +15,7 @@ local delivery_sec_t = {		-- item indices
 -- ============================================
 -- ======== (1) RF Scout and delivery =========
 -- ============================================
-task_functor.raid_task_rf_scout_and_delivery_out_target_functor = function(task_id,field,p,tsk)
+task_functor.raid_task_rf_scout_and_delivery_out_target_functor = function(task_id, field, p, tsk)
 	local active_t = raid_tasks_main.raid_active_tasks
 	local stage = tsk and tsk.stage
 
@@ -21,16 +24,19 @@ task_functor.raid_task_rf_scout_and_delivery_out_target_functor = function(task_
 	elseif (field == "descr") then
 		return raid_utils.get_raid_task_descr(task_id, stage, 5)
 	elseif (field == "target") and stage and stage > 0 and active_t[task_id] then
-		if (stage == 3 or stage == 4) then 
+		-- only for debug
+		-- if (stage == 1) then
+			-- return active_t[task_id].smart_id
+		-- end
+		if (stage == 3 or stage == 4) then
 			return active_t[task_id].item_id
 		end
 		return
 	end
 end
 
-task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = function(tsk,task_id)
-
-    local active_t = raid_tasks_main.raid_active_tasks
+task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = function(tsk, task_id)
+	local active_t = raid_tasks_main.raid_active_tasks
 	local cur_time = game.get_game_time()
 	local task_data = raid_tasks_main.get_task_data(task_id)
 	if not (task_data and tsk) then return end
@@ -43,7 +49,7 @@ task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = functio
 		return
 	end
 
---[[
+	--[[
 	0 = setup
 	1 = process
 	2 = completed setup delivery (0)
@@ -58,6 +64,7 @@ task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = functio
 
 		-- store level and smarts table
 		active_t[task_id].level_name = task_data.level_name
+		-- UNUSED FIELD, based on string.find(typ, "scout") logic
 		active_t[task_id].smarts_t = {}
 
 		-- store type
@@ -65,35 +72,33 @@ task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = functio
 		active_t[task_id].target_freq = task_data.target_freq
 
 		-- collect and mark smarts
-		local smart_amounts = raid_simulation.raid_sim_t[task_data.level_name].level_tier * 1
-		local smarts_t = raid_utils.find_random_smart(task_data.level_name, nil, smart_amounts)
-		printf("scout level name: %s || smarts_amount: %s || smarts_table_size: %s", task_data.level_name, smart_amounts, size_table(smarts_t))
-		if smarts_t then
-			for sm_id, _ in pairs(smarts_t) do
-				printf("collect scout smarts, smart_id: %s", sm_id)
-				active_t[task_id].smarts_t[sm_id] = "active"		-- "scouted" when scouted
-				raid_tasks_scout.mark_smart(sm_id)
-			end
-		else
-			printf("! [Raid] Error in collection Scout smarts")
-		end
-
-		active_t[task_id].scouted = 0
-		active_t[task_id].amount = size_table(smarts_t)
+		active_t[task_id].smart_id = raid_utils.find_random_smart(task_data.level_name, nil)
+		active_t[task_id].ping_sound = true
 
 		-- set timer
 		active_t[task_id].start_time = ctime_to_t(cur_time)
 
 		tsk.stage = 1
-		return		-- next update just in case
+		return -- next update just in case
 	end
 
-	if tsk.stage == 1 and active_t[task_id].scouted == active_t[task_id].amount then
-		local str = strformat(gt("rf_scout_and_delivery_out_task_update"), ui_options.curr_player_name())
-		news_manager.send_tip(db.actor, str, 3, nil, 5000)
-		tsk.stage = 2
+	if tsk.stage == 1 then
+		local se_obj = alife_object(active_t[task_id].smart_id)
+		if se_obj then
+			local objpos = se_obj.position
+			local dist_pos = db.actor:position():distance_to(objpos)
+
+			if dist_pos < 25 and raid_utils.isRfScanning(active_t[task_id].target_freq) then
+				local str = strformat(gt("rf_find_place_and_delivery_out_task_update"), ui_options.curr_player_name())
+				news_manager.send_tip(db.actor, str, 3, nil, 5000)
+				active_t[task_id].ping_sound = false
+				tsk.stage = 2
+			else
+				return
+			end
+		end
 	end
-	
+
 	-- setup delivery
 	if tsk.stage == 2 then
 		-- active_t[task_id] = {}
@@ -113,7 +118,7 @@ task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = functio
 		active_t[task_id].item_id = item and item.id or "No item ID"
 
 		tsk.stage = 3
-		return		-- next update just in case
+		return -- next update just in case
 	end
 
 	-- item taken delivery
@@ -149,5 +154,47 @@ task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = functio
 			return
 		end
 	end
+end
 
+function boop_if_nearby(target_id)
+	local tg = time_global()
+
+	if (tg > tb_tg_scan) then
+		tb_tg_scan = tg + tb_scan_time
+	else
+		return
+	end
+
+	local se_obj = alife_object(target_id)
+	if se_obj then
+		local objpos = se_obj.position
+		local dist_pos = db.actor:position():distance_to(objpos)
+
+		local lowbeep = ("detectors\\tb_lowbeep")
+
+		if dist_pos >= 25 and dist_pos <= 300 then
+			tb_scan_time = 50 + dist_pos * 10
+			xr_effects.play_snd(actor, nil, {
+				[1] = lowbeep
+			})
+			return
+		end
+	end
+end
+
+function actor_on_update()
+	local active_t = raid_tasks_main.raid_active_tasks
+
+
+	for task_id, t in pairs(active_t) do
+		local task_data = raid_tasks_main.get_task_data(task_id)
+		local cur_task = active_t[task_id]
+		if string.find(task_data.typ, "rf_scout") and task_data.level_name == level.name() and cur_task.ping_sound and raid_utils.isRfScanning(task_data.target_freq) then
+			boop_if_nearby(cur_task.smart_id)
+		end
+	end
+end
+
+function on_game_start()
+	RegisterScriptCallback("actor_on_update", actor_on_update)
 end

@@ -162,7 +162,7 @@ function generate_tasks()
 
 
 		-- pick random tasks until "tasks_amount" is reached
-		for i = 1, tasks_amount do
+		for i = 1, tasks_amount + 40 do
 			if (not is_empty(task_sections)) then
 
 				local sec = random_key_table(task_sections)

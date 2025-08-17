@@ -152,7 +152,6 @@ end
 
 function mark_smart(id)
 	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral") == 0 then
-		--level.map_add_object_spot_ser(id, "alife_presentation_general_base_neutral", "scout_descr smart_id: " .. id)
 		level.map_add_object_spot_ser(id, "alife_presentation_general_base_neutral", gt("st_raid_task_scout")..": "..gt("st_"..alife_object(id):name().."_name")) 
 	end
 end
