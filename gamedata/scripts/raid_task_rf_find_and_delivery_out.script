@@ -56,7 +56,7 @@ task_status_functor.raid_task_rf_find_and_delivery_out_status_functor = function
 	3 = taking process (1)
 	4 = quest item dropped (2)
 	5 = taken (3)
---]]
+    --]]
 
     -- setup
     if tsk.stage == 0 then
@@ -84,10 +84,6 @@ task_status_functor.raid_task_rf_find_and_delivery_out_status_functor = function
     end
 
     if tsk.stage == 1 then
-        local tg = time_global()
-
-        printf("--OLD BOOP CONDITION CHECK")
-
         local item = alife_object(active_t[task_id].item_id)
         if item and item.parent_id and item.parent_id == 0 then
             tsk.stage = 2
@@ -146,8 +142,6 @@ function boop_if_nearby(stash_id)
         local dist_pos = db.actor:position():distance_to(objpos)
 
         local lowbeep = ("detectors\\tb_lowbeep")
-        local midbeep = ("detectors\\tb_midbeep")
-        local highbeep = ("detectors\\tb_highbeep")
 
         if dist_pos < 300 then
             tb_scan_time = 50 + dist_pos * 10
@@ -157,7 +151,6 @@ function boop_if_nearby(stash_id)
             return
         end
     end
-    -- end
 end
 
 function actor_on_update()
@@ -170,8 +163,6 @@ function actor_on_update()
 
         if string.find(task_data.typ, "rf_find") and task_data.level_name == level.name() and cur_task.ping_sound and raid_utils.isRfScanning(task_data.target_freq)  then
             boop_if_nearby(cur_task.stash_id)
-        else
-            return
         end
     end
 end

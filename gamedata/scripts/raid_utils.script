@@ -1331,9 +1331,12 @@ end
 function isRfScanning(target_freq) 
     local obj_det = db.actor:active_detector()
 	if not (obj_det and obj_det:section() == "detector_radio" and obj_det:condition() >= obj_det:power_critical()) then
-        printf('no item')
 		return false
 	end
+	printf("isRfScanning")
+	printf("item_radio.get_freq(): %s", item_radio.get_freq())
+	printf("target_freq: %s", target_freq)
+	printf("EQUAL?: %s", item_radio.get_freq() == target_freq)
 	return item_radio.get_freq() == target_freq
 end
 
