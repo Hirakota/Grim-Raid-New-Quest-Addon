@@ -4,7 +4,7 @@
 -- any need to remove from "raid_squads_t" on unregister? i think not
 
 raid_squads_t = {}
-raid_squad_track = nil
+raid_squad_track_id = nil
 local raid_sim_spawned = false
 
 rank_limit_t = {
@@ -690,6 +690,7 @@ function raid_start_spawn(level_name)
 	end
 
 	-- spawn stalkers
+	local spawned_squads = {}
 	for faction, t in pairs(squads_t.stalkers) do
 		if faction ~= "random" then
 			for tier, t2 in pairs(t) do
@@ -716,6 +717,8 @@ function raid_start_spawn(level_name)
 									squad.idle_time = 0
 									raid_squads_t[squad.id] = "walking"
 								end
+
+								spawned_squads[squad_sec] = squad
 								printf("- spawn stalker squad [%s] on smart [%s]", squad_sec, smart:name())
 							end
 
@@ -762,6 +765,8 @@ function raid_start_spawn(level_name)
 					squad.idle_time = 0
 					raid_squads_t[squad.id] = "walking"
 					printf("~ spawn random stalker squad [%s] on smart [%s]", squad_sec, smart:name())
+
+					spawned_squads[squad_sec] = squad
 				end
 
 				-- remove smart from the table (spawn 1 squad per smart)
@@ -772,6 +777,15 @@ function raid_start_spawn(level_name)
 
 	end
 
+	for squad_type, squad in pairs(spawned_squads) do
+		if string.find(squad_type, "stalker") or string.find(squad_type, "duty") or string.find(squad_type, "freedom") or string.find(squad_type, "csky") then
+			if not raid_squad_track then 
+				printf("SQUAD WILL BE " .. squad_type .. squad.id)
+				raid_squad_track_id = squad.id
+			end
+			break
+		end
+	end
 
 	-- Mutant spawn
 	-- pick random preset
@@ -874,6 +888,7 @@ function release_raid_sim_squads()
 		end
 	end
 
+	raid_squad_track_id = nil
 	empty_table(raid_squads_t)
 end
 
@@ -912,14 +927,15 @@ end
 
 -- store squads data to set idle time or scripted target again
 function save_state(m_data)
-	m_data.raid_squad_track = raid_squad_track
 	m_data.raid_squads_t = raid_squads_t
 	m_data.raid_sim_spawned = raid_sim_spawned
+	m_data.raid_squad_track_id = raid_squad_track_id
 end
 
 function load_state(m_data)
 	raid_squads_t = m_data.raid_squads_t or {}
 	raid_sim_spawned = m_data.raid_sim_spawned or nil
+	raid_squad_track_id = m_data.raid_squad_track_id or nil
 end
 
 -- TEST
