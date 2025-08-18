@@ -89,7 +89,7 @@ task_status_functor.raid_task_rf_scout_and_delivery_out_status_functor = functio
 			local dist_pos = db.actor:position():distance_to(objpos)
 
 			if dist_pos < 25 and raid_utils.isRfScanning(active_t[task_id].target_freq) then
-				local str = strformat(gt("rf_find_place_and_delivery_out_task_update"), ui_options.curr_player_name())
+				local str = strformat(gt("rf_scout_and_delivery_out_task_update"), ui_options.curr_player_name())
 				news_manager.send_tip(db.actor, str, 3, nil, 5000)
 				active_t[task_id].ping_sound = false
 				tsk.stage = 2
