@@ -1,0 +1,174 @@
+local gt = game.translate_string
+local ltx = ini_file("misc\\task\\tm_raid_tasks.ltx")
+local ctime_to_t = utils_data.CTime_to_table
+local t_to_ctime = utils_data.CTime_from_table
+
+-- local tb_tg_scan = 0
+-- local tb_scan_time = 4000;
+
+local delivery_sec_t = { -- item indices
+    ["in"] = { 1, 2, 3, 4, 5 },
+    ["out"] = { 6, 7, 8, 9, 10, 11 },
+}
+
+
+-- ============================================
+-- ======== (1) RF search and delivery =========
+-- ============================================
+task_functor.raid_sudden_task_find_squad_and_delivery_out_target_functor = function(task_id, field, p, tsk)
+    local active_t = raid_tasks_main.raid_active_tasks
+    local stage = tsk and tsk.stage
+
+    if (field == "title") then
+        return raid_utils.get_raid_task_title(task_id, stage, 4)
+    elseif (field == "descr") then
+        return raid_utils.get_raid_task_descr(task_id, stage, 4)
+    elseif (field == "target") and stage and stage > 0 and active_t[task_id] then
+        -- uncomment for debug (mark target stash)
+        if(tsk.stage == 1) then
+            return active_t[task_id].nearest_smart_id
+        end
+
+        if tsk.stage == 2 then
+            return active_t[task_id].item_id
+        end
+        return
+    end
+end
+
+task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor = function(tsk, task_id)
+	local active_t = raid_tasks_main.raid_active_tasks
+	local cur_time = game.get_game_time()
+	local task_data = raid_tasks_main.get_task_data(task_id)
+	if not (task_data and tsk) then return end
+
+	if not tsk.stage then
+		tsk.stage = 0
+	end
+
+	if tsk.stage > 0 and not active_t[task_id] then
+		return
+	end
+
+	--[[
+        0 = setup
+        1 = find item
+        2 = pick up item
+        3 = complete quest or cancel it
+    --]]
+
+	-- setup
+	if tsk.stage == 0 then
+		active_t[task_id] = {}
+
+		-- store level and smarts table
+		active_t[task_id].level_name = task_data.level_name
+
+		-- store type
+		active_t[task_id].typ = task_data.typ
+        printf("task_data.stalker_id: %s", task_data.stalker_id)
+		active_t[task_id].stash_id = task_data.stalker_id
+
+		-- spawn item in stash and store its id
+		local itm_ar = delivery_sec_t["out"]
+		local item_sec = "raid_delivery_item_" .. itm_ar[math.random(1, #itm_ar)]
+		local se_stash = alife_object(active_t[task_id].stash_id)
+
+        local n_smart = GetNearestSmartTerrain(se_stash.position)
+        active_t[task_id].nearest_smart_id = n_smart.id
+
+		local item = alife_create_item(item_sec, se_stash)
+		active_t[task_id].item_sec = item_sec
+		active_t[task_id].item_id = item and item.id or "No item ID"
+
+
+		-- set timer
+		active_t[task_id].start_time = ctime_to_t(cur_time)
+
+        -- find_squad_and_delivery_out_task_initial_
+        local comm = string.gsub(task_id, "_raid_sudden_task_find_squad_and_delivery_out", "")
+        local str = strformat(gt("find_squad_and_delivery_out_task_initial_" .. comm), ui_options.curr_player_name())
+		news_manager.send_tip(db.actor, str, 3, nil, 5000)
+		tsk.stage = 1
+		return -- next update just in case
+	end
+
+	-- search item
+	if tsk.stage == 1 then
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id == 0 then
+			tsk.stage = 2
+		end
+	end
+
+	-- item taken delivery
+	if tsk.stage == 2 then
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id == 0 then
+			tsk.stage = 3
+		end
+	end
+
+	-- item dropped delivery
+	if tsk.stage == 3 then
+		local item = alife_object(active_t[task_id].item_id)
+		if item and item.parent_id and item.parent_id ~= 0 then
+			tsk.stage = 2
+		end
+	end
+
+
+	-- complete delivery
+	if tsk.stage == 3 then
+		if level.name() == raid_utils.raid_home_level then
+			raid_tasks_main.end_raid_task(task_id, "complete")
+		end
+		return
+	end
+
+	-- cancel on exit
+	if tsk.stage < 3 then
+		if level.name() == raid_utils.raid_home_level then
+			raid_tasks_main.end_raid_task(task_id, "cancel")
+		end
+		return
+	end
+
+	-- fail on timer
+	if task_data.urgent < 4 then
+		local hours = raid_tables.raid_urgency_time[task_data.urgent]
+		if cur_time:diffSec(t_to_ctime(active_t[task_id].start_time)) > (hours * 3600) then
+			raid_tasks_main.end_raid_task(task_id, "cancel")
+			return
+		end
+	end
+end
+
+function GetNearestSmartTerrain(position)
+    local nearest_smart = nil
+    local min_distance = math.huge  -- Initialize with a very large number
+
+    local smart_terrains = {}
+    for sname, sm in pairs(SIMBOARD.smarts_by_names) do
+		local smart_lid = game_graph():vertex(sm.m_game_vertex_id):level_id()
+		local smart_lname = smart_lid and alife():level_name(smart_lid)
+        local level_name = level.name()
+--		printf("    %s and %s", (not smart_lname and "! Not smart name") or (smart_lname == level_name and "- Smart is on this level") or "! Smart NOT on this level", busy_smart and "Busy" or "Free")
+		if smart_lname and smart_lname == level_name then
+            smart_terrains[sm.id] = sm
+		end
+	end
+
+    for id, smart in pairs(smart_terrains) do
+        if smart and smart.position then
+            local dist = position:distance_to(smart.position)
+            printf("DIST %s", dist)
+            if dist < min_distance then
+                min_distance = dist
+                nearest_smart = smart
+            end
+        end
+    end
+
+    return nearest_smart
+end

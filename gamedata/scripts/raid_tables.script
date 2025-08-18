@@ -335,6 +335,7 @@ task_reward_mults = {
 	["scout"] = 1.2,		["kill_stalker"] = 1.6,	["kill_stalker_squad"] = 2.45,		["kill_mutant_squad"] = 2.20,
 	["guide"] = 1.9,		["evacuation"] = 2.3,		["kill_strong_stalker_squad"] = 3.35,		["kill_strong_mutant_squad"] = 3.15,
 	["kill_stalker_and_delivery_out"] = 2.9, ["rf_scout_and_delivery_out"] = 3.8, ["rf_find_and_delivery_out"] = 3.3, ["anomaly_scan"] = 1.9,
+	["find_squad_and_delivery_out"] = 4.2,
 }
 
 --v0.8.7

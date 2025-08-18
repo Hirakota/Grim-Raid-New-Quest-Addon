@@ -696,5 +696,59 @@
 		<text>Найти и доставить потеряную посылку (частота %s MHz)</text>
 	</string>
 
+	<!-- SUDDEN FIND SQUAD AND DELIVERY OUT ** QUST RELATED TEXT -->
+	<!-- Task-related messages (updates, additional info) -->
+	<string id="find_squad_and_delivery_out_task_initial_stalker">
+        <text>(СТАЛКЕР) Описание че по чем</text>
+    </string>
+	<string id="find_squad_and_delivery_out_task_initial_duty">
+        <text>(ДОЛГ) Описание че по чем</text>
+    </string>
+	<string id="find_squad_and_delivery_out_task_initial_freedom">
+        <text>(СВОБОДА) Описание че по чем</text>
+    </string>
+	<string id="find_squad_and_delivery_out_task_initial_ecolog">
+        <text>(САХАРО) Описание че по чем</text>
+    </string>
+	<string id="find_squad_and_delivery_out_task_initial_other">
+        <text>(NO DATA) Описание че по чем</text>
+    </string>
+
+	<!-- task types -->
+	<string id="st_raid_task_find_squad_and_delivery_out">
+		<text>Найти потеряный отряд и доставить предмет (из места)</text>
+	</string>
+
+	<!-- task long descr -->
+		<!-- stalker -->
+	<string id="st_raid_task_find_squad_and_delivery_out_stalker_descr">
+		<text>Найти потеряный отряд и доставить предмет (сталкер)</text>
+	</string>
+
+		<!-- duty -->
+	<string id="st_raid_task_find_squad_and_delivery_out_duty_descr">
+		<text>Найти потеряный отряд и доставить предмет (долг)</text>
+	</string>
+
+		<!-- freedom -->
+	<string id="st_raid_task_find_squad_and_delivery_out_freedom_descr">
+		<text>Найти потеряный отряд и доставить предмет (свобода)</text>
+	</string>
+
+		<!-- ecolog -->
+	<string id="st_raid_task_find_squad_and_delivery_out_ecolog_descr">
+		<text>Найти потеряный отряд и доставить предмет (ученые)</text>
+	</string>
+
+		<!-- other -->
+    <string id="st_raid_task_find_squad_and_delivery_out_other_descr">
+		<text>Найти потеряный отряд и доставить предмет (no data)</text>
+	</string>
+
+	<!-- task short descr -->
+	<string id="st_raid_task_find_squad_and_delivery_out_short_descr">
+		<text>Найти потеряный отряд и доставить предмет</text>
+	</string>
+
 
 </string_table>
