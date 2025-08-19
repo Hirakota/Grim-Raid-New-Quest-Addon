@@ -25,9 +25,9 @@ task_functor.raid_sudden_task_find_squad_and_delivery_out_target_functor = funct
         return raid_utils.get_raid_task_descr(task_id, stage, 4)
     elseif (field == "target") and stage and stage > 0 and active_t[task_id] then
         -- uncomment for debug (mark target stash)
-        if(tsk.stage == 1) then
-            return active_t[task_id].nearest_smart_id
-        end
+        -- if(tsk.stage == 1) then
+            -- return active_t[task_id].stash_id
+        -- end
 
         if tsk.stage == 2 then
             return active_t[task_id].item_id
@@ -73,9 +73,16 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 		local itm_ar = delivery_sec_t["out"]
 		local item_sec = "raid_delivery_item_" .. itm_ar[math.random(1, #itm_ar)]
 		local se_stash = alife_object(active_t[task_id].stash_id)
+		
+		active_t[task_id].nearest_smart_ids = {}
+        local n_smarts = GetNearestSmartTerrain(se_stash.position)
+		for idx, n_smart in pairs(n_smarts) do
+			table.insert(active_t[task_id].nearest_smart_ids, n_smart.smart.id)
+		end
 
-        local n_smart = GetNearestSmartTerrain(se_stash.position)
-        active_t[task_id].nearest_smart_id = n_smart.id
+		for idx, smart_id in pairs(active_t[task_id].nearest_smart_ids) do
+			mark_smart(smart_id, idx == 1)
+		end
 
 		local item = alife_create_item(item_sec, se_stash)
 		active_t[task_id].item_sec = item_sec
@@ -97,6 +104,9 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 	if tsk.stage == 1 then
 		local item = alife_object(active_t[task_id].item_id)
 		if item and item.parent_id and item.parent_id == 0 then
+			for idx, smart_id in pairs(active_t[task_id].nearest_smart_ids) do
+				unmark_smart(smart_id)
+			end
 			tsk.stage = 2
 		end
 	end
@@ -144,31 +154,54 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 	end
 end
 
+-- returns 3 smarts
 function GetNearestSmartTerrain(position)
-    local nearest_smart = nil
-    local min_distance = math.huge  -- Initialize with a very large number
-
-    local smart_terrains = {}
+	local smart_list = {}
+    
+	local smart_terrains = {}
     for sname, sm in pairs(SIMBOARD.smarts_by_names) do
 		local smart_lid = game_graph():vertex(sm.m_game_vertex_id):level_id()
 		local smart_lname = smart_lid and alife():level_name(smart_lid)
         local level_name = level.name()
---		printf("    %s and %s", (not smart_lname and "! Not smart name") or (smart_lname == level_name and "- Smart is on this level") or "! Smart NOT on this level", busy_smart and "Busy" or "Free")
 		if smart_lname and smart_lname == level_name then
             smart_terrains[sm.id] = sm
 		end
 	end
 
+    -- First, collect all smart terrains with their distances
     for id, smart in pairs(smart_terrains) do
         if smart and smart.position then
             local dist = position:distance_to(smart.position)
-            printf("DIST %s", dist)
-            if dist < min_distance then
-                min_distance = dist
-                nearest_smart = smart
-            end
+            table.insert(smart_list, {
+                smart = smart,
+                distance = dist
+            })
         end
     end
 
-    return nearest_smart
+    -- Sort by distance (ascending)
+    table.sort(smart_list, function(a, b)
+        return a.distance < b.distance
+    end)
+
+    -- Return top 2 closest
+    local result = {}
+    for i = 1, math.min(2, #smart_list) do
+        table.insert(result, smart_list[i])
+    end
+
+    return result
+end
+
+function mark_smart(id, most_nearest)
+	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral") == 0 then
+		local fromOrTo = most_nearest and "from" or "to"
+		level.map_add_object_spot_ser(id, "alife_presentation_general_base_neutral", gt("find_squad_and_delivery_out_task_moved_" .. fromOrTo .. "_mark")..": "..gt("st_"..alife_object(id):name().."_name")) 
+	end
+end
+
+function unmark_smart(id)
+	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral") ~= 0 then
+		level.map_remove_object_spot(id, "alife_presentation_general_base_neutral")
+	end
 end

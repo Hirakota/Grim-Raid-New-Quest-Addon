@@ -698,6 +698,13 @@
 
 	<!-- SUDDEN FIND SQUAD AND DELIVERY OUT ** QUST RELATED TEXT -->
 	<!-- Task-related messages (updates, additional info) -->
+	<string id="find_squad_and_delivery_out_task_moved_from_mark">
+        <text>Двигались из</text>
+    </string>
+	<string id="find_squad_and_delivery_out_task_moved_to_mark">
+        <text>Двигались в</text>
+    </string>
+
 	<string id="find_squad_and_delivery_out_task_initial_stalker">
         <text>(СТАЛКЕР) Описание че по чем</text>
     </string>

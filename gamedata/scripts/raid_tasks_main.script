@@ -483,8 +483,9 @@ function squad_on_npc_death(squad, se_obj, se_killer)
 		return
 	end
 
-	-- chance 40% to get quest on tracked squad wiped
-	if math.random(0, 100) > 40 then
+	-- chance in 40% to not recive a quest
+	if math.random(1, 100) > 40 then
+		printf("# Roll failed to recive a quest")
 		raid_simulation.raid_squad_track_id = nil
 		return
 	end
