@@ -3,8 +3,8 @@ local ltx = ini_file("misc\\task\\tm_raid_tasks.ltx")
 local ctime_to_t = utils_data.CTime_to_table
 local t_to_ctime = utils_data.CTime_from_table
 
--- local tb_tg_scan = 0
--- local tb_scan_time = 4000;
+local tb_tg_scan = 0
+local tb_scan_time = 4000;
 
 local delivery_sec_t = { -- item indices
     ["in"] = { 1, 2, 3, 4, 5 },
@@ -66,7 +66,6 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 
 		-- store type
 		active_t[task_id].typ = task_data.typ
-        printf("task_data.stalker_id: %s", task_data.stalker_id)
 		active_t[task_id].stash_id = task_data.stalker_id
 
 		-- spawn item in stash and store its id
@@ -89,12 +88,18 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 		active_t[task_id].item_id = item and item.id or "No item ID"
 
 
+		-- rf reciver data
+		active_t[task_id].target_freq = task_data.target_freq
+		active_t[task_id].ping_sound = true
+
 		-- set timer
 		active_t[task_id].start_time = ctime_to_t(cur_time)
 
         -- find_squad_and_delivery_out_task_initial_
         local comm = string.gsub(task_id, "_raid_sudden_task_find_squad_and_delivery_out", "")
         local str = strformat(gt("find_squad_and_delivery_out_task_initial_" .. comm), ui_options.curr_player_name())
+
+		str = str .. " (" .. active_t[task_id].target_freq .. " MHz)"
 		news_manager.send_tip(db.actor, str, 3, nil, 5000)
 		tsk.stage = 1
 		return -- next update just in case
@@ -107,6 +112,8 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 			for idx, smart_id in pairs(active_t[task_id].nearest_smart_ids) do
 				unmark_smart(smart_id)
 			end
+			active_t[task_id].ping_sound = false
+
 			tsk.stage = 2
 		end
 	end
@@ -154,7 +161,7 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 	end
 end
 
--- returns 3 smarts
+-- returns 2 smarts
 function GetNearestSmartTerrain(position)
 	local smart_list = {}
     
@@ -204,4 +211,49 @@ function unmark_smart(id)
 	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral") ~= 0 then
 		level.map_remove_object_spot(id, "alife_presentation_general_base_neutral")
 	end
+end
+
+function boop_if_nearby(stash_id)
+    local tg = time_global()
+
+    if (tg > tb_tg_scan) then
+        tb_tg_scan = tg + tb_scan_time
+    else
+        return
+    end
+
+    local se_obj = alife_object(stash_id)
+    if se_obj then
+        local objpos = se_obj.position
+        local dist_pos = db.actor:position():distance_to(objpos)
+
+        local lowbeep = ("detectors\\tb_lowbeep")
+
+        if dist_pos < 300 then
+            tb_scan_time = 50 + dist_pos * 10
+            xr_effects.play_snd(actor, nil, {
+                [1] = lowbeep
+            })
+            return
+        end
+    end
+end
+
+function actor_on_update()
+    local active_t = raid_tasks_main.raid_active_tasks
+
+
+    for task_id, t in pairs(active_t) do
+        local task_data = raid_tasks_main.get_task_data(task_id)
+        local cur_task = active_t[task_id]
+
+
+        if string.find(task_data.typ, "find_squad_and_delivery_out") and task_data.level_name == level.name() and cur_task.ping_sound and raid_utils.isRfScanning(task_data.target_freq)  then
+            boop_if_nearby(cur_task.stash_id)
+        end
+    end
+end
+
+function on_game_start()
+    RegisterScriptCallback("actor_on_update", actor_on_update)
 end

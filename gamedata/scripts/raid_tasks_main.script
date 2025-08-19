@@ -542,6 +542,11 @@ function squad_on_npc_death(squad, se_obj, se_killer)
 	raid_tasks_t[comm]["tasks"][target_section].urgent = task_base_data.urgent
 	raid_tasks_t[comm]["tasks"][target_section].comm = comm
 
+	local freq = math.random(30, 300)
+	printf("!!! SET FREQ")
+	raid_tasks_t[comm]["tasks"][target_section].target_freq = freq
+	printf("~~~ GET FREQ %s", raid_tasks_t[comm]["tasks"][target_section].target_freq)
+
 	-- set rewards
 	if raid_tables.task_reward_mults[task_base_data.typ] then
 		raid_tasks_t[comm]["tasks"][target_section].reward = raid_utils.get_task_reward(comm, task_base_data)
@@ -559,10 +564,11 @@ function squad_on_npc_death(squad, se_obj, se_killer)
 
 	raid_tasks_t[comm]["tasks"][target_section].level_name = level.name()
 
-	-- store reciver freq
-	if task_base_data.typ == "find_squad_and_delivery_out" then
-		raid_tasks_t[comm]["tasks"][target_section].stalker_id = squad:commander_id()
-	end
+	-- setup body data
+	local body = alife_object(squad:commander_id())
+	raid_tasks_t[comm]["tasks"][target_section].stalker_id = body.id
+    body:can_switch_offline(false)  -- Keep object always active
+    body:keep_saved_data_anyway(true)  -- Force save persistence
 
 	task_manager.get_task_manager():give_task(target_section)
 end
