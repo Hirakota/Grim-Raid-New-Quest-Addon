@@ -197,7 +197,7 @@ function generate_tasks()
 				raid_tasks_t[comm]["tasks"][sec].level_name = level_name
 
 				-- store reciver freq
-				if task_sections[sec].typ == "rf_scout_and_delivery_out" or task_sections[sec].typ == "rf_find_and_delivery_out" then 
+				if task_sections[sec].typ == "rf_scout_and_delivery_out" or task_sections[sec].typ == "rf_find_and_delivery_out" then
 					local freq = math.random(30, 300)
 					raid_tasks_t[comm]["tasks"][sec].target_freq = freq
 				end
@@ -304,20 +304,20 @@ end
 
 function end_raid_task(task_id, mode, reward)
 
-    if mode == "complete" then                                                     
-        task_manager.get_task_manager():set_task_completed(task_id)
-        -- give reward and msg
-        for comm, t in pairs(raid_tasks_t) do
-            if t.tasks[task_id] then
-                raid_utils.raid_send_task_msg(t.tasks[task_id], "complete")
-                raid_utils.give_task_reward(t.tasks[task_id], comm, task_id)
-                
-                -- For achievements
-                if (not string.find(task_id, "find_")) then                 
-                    raid_achievements.increment_count_complete_tasks_raid()
-                end                
-            end
-        end
+	if mode == "complete" then
+		task_manager.get_task_manager():set_task_completed(task_id)
+		-- give reward and msg
+		for comm, t in pairs(raid_tasks_t) do
+			if t.tasks[task_id] then
+				raid_utils.raid_send_task_msg(t.tasks[task_id], "complete")
+				raid_utils.give_task_reward(t.tasks[task_id], comm, task_id)
+
+				-- For achievements
+				if (not string.find(task_id, "find_")) then
+					raid_achievements.increment_count_complete_tasks_raid()
+				end
+			end
+		end
 	elseif mode == "fail" then
 		task_manager.get_task_manager():set_task_failed(task_id)
 		-- penalties and msg
@@ -351,7 +351,7 @@ function end_raid_task(task_id, mode, reward)
 
 	-- release item in "delivery"
 	local in_cond = string.find(task_id, "delivery_in") and raid_active_tasks[task_id].item_id
-	-- every task that include delivery_out 
+	-- every task that include delivery_out
 	local out_cond = string.find(task_id, "delivery_out")
 	local scan_cond = string.find(task_id, "anomaly_scan")
 	-- local k_out_cond = string.find(task_id, "kill_stalker_and_delivery_out")
@@ -444,9 +444,9 @@ function reset_tasks_update()
 
 	local cur_time = game.get_game_time()
 	if (not reset_time) or cur_time:diffSec(t_to_ctime(reset_time)) > raid_tables.task_reset_cooldown then
-	--	local Y, M, D, h, m, s, ms = 0, 0, 0, 0, 0, 0, 0
-	--	Y, M, D, h, m, s, ms = cur_time:get(Y, M, D, h, m, s, ms)
-	--	cur_time:set(Y, M, D, 4, 0, 0, 0)
+		--	local Y, M, D, h, m, s, ms = 0, 0, 0, 0, 0, 0, 0
+		--	Y, M, D, h, m, s, ms = cur_time:get(Y, M, D, h, m, s, ms)
+		--	cur_time:set(Y, M, D, 4, 0, 0, 0)
 		reset_time = ctime_to_t(cur_time)
 
 		-- reset tasks
@@ -469,6 +469,108 @@ function pr(...)
 	printf(...)
 end
 
+-- give sunndent task on npc death
+function squad_on_npc_death(squad, se_obj, se_killer)
+	local isSquadTracked = raid_simulation.raid_squad_track_id and (squad.id == raid_simulation.raid_squad_track_id)
+
+	if not isSquadTracked then
+		return
+	end
+
+	local squadSize = raid_utils.get_squad_size(squad.id)
+
+	if squadSize > 0 then
+		return
+	end
+
+	-- chance in 40% to not recive a quest
+	if math.random(1, 100) > 40 then
+		printf("# Roll failed to recive a quest")
+		raid_simulation.raid_squad_track_id = nil
+		return
+	end
+
+	local ltx = ini_file("misc\\task\\tm_raid_sudden_tasks.ltx")
+
+	local comm = nil
+	for c, t in pairs(raid_tasks_t) do
+		if string.find(squad:name(), c) then
+			if c == "csky" then
+				comm = "stalker"
+			else
+				comm = c
+			end
+			break
+		end
+	end
+
+	if not comm then
+		comm = random_key_table(raid_tasks_t)
+	end
+
+
+	local target_section = nil
+	local task_base_data = {}
+	local sections = {}
+
+	ltx:section_for_each(function(section)
+		if string.find(section, comm .. "_raid_sudden_task_find_squad_and_delivery_out") then
+			local task_type = string.gsub(section, comm .. "_raid_sudden_task_", "")
+			pr("task_type: %s", task_type)
+
+			-- store with default parameters
+			task_base_data.typ = task_type
+			task_base_data.urgent = 1
+			task_base_data.tier = 1
+
+			target_section = section
+			table.insert( sections, section )
+		end
+	end)
+
+	if not target_section then
+		raid_simulation.raid_squad_track_id = nil
+		return;
+	end
+
+	-- store this task info
+	raid_tasks_t[comm]["tasks"][target_section] = {}
+	raid_tasks_t[comm]["tasks"][target_section].active = false
+
+	raid_tasks_t[comm]["tasks"][target_section].typ = task_base_data.typ
+	raid_tasks_t[comm]["tasks"][target_section].tier = task_base_data.tier
+	raid_tasks_t[comm]["tasks"][target_section].urgent = task_base_data.urgent
+	raid_tasks_t[comm]["tasks"][target_section].comm = comm
+
+	local freq = math.random(30, 300)
+	raid_tasks_t[comm]["tasks"][target_section].target_freq = freq
+
+	-- set rewards
+	if raid_tables.task_reward_mults[task_base_data.typ] then
+		raid_tasks_t[comm]["tasks"][target_section].reward = raid_utils.get_task_reward(comm, task_base_data)
+	elseif raid_tables.task_special_reward[task_base_data.typ] then
+		raid_tasks_t[comm]["tasks"][target_section].special_reward_mult = raid_utils.get_task_reward(comm, task_base_data, true)
+	end
+
+	-- find current level tier
+	for lname, lt in pairs(raid_simulation.raid_sim_t) do
+		if lname == level.name() then
+			raid_tasks_t[comm]["tasks"][target_section].tier = lt.level_tier
+			break
+		end
+	end
+
+	raid_tasks_t[comm]["tasks"][target_section].level_name = level.name()
+
+	-- setup body data
+	local body = alife_object(squad:commander_id())
+	raid_tasks_t[comm]["tasks"][target_section].stalker_id = body.id
+    body:can_switch_offline(false)  -- Keep object always active
+    body:keep_saved_data_anyway(true)  -- Force save persistence
+
+	task_manager.get_task_manager():give_task(target_section)
+end
+
 function save_state(m_data)
 	m_data.raid_active_tasks = raid_active_tasks
 	m_data.raid_tasks_t = raid_tasks_t
@@ -481,7 +583,7 @@ end
 function load_state(m_data)
 	raid_active_tasks = m_data.raid_active_tasks or raid_active_tasks
 
---	raid_tasks_t = m_data.raid_tasks_t or raid_tasks_t
+	--	raid_tasks_t = m_data.raid_tasks_t or raid_tasks_t
 	if m_data.raid_tasks_t then
 		for comm, t in pairs(m_data.raid_tasks_t) do
 			raid_tasks_t[comm].goodwill = t.goodwill
@@ -495,8 +597,26 @@ function load_state(m_data)
 	reset_time = m_data.raid_reset_time or reset_time
 end
 
+
+-- Simple direct hook (may need to be in correct load order)
+Crelease_body = release_body_manager.Crelease_body
+if Crelease_body and Crelease_body.can_release then
+    local original = Crelease_body.can_release
+    Crelease_body.can_release = function(self, obj)
+
+		local objId = obj:id()
+		local raid_squad_track_id = raid_simulation.raid_squad_track_id
+		if raid_squad_track_id and objId and objId == raid_squad_track_id then
+			return false
+		end
+
+        return original(self, obj)
+    end
+end
+
 function on_game_start()
 	RegisterScriptCallback("actor_on_update", reset_tasks_update)
+	RegisterScriptCallback("squad_on_npc_death", squad_on_npc_death)
 	RegisterScriptCallback("save_state", save_state)
 	RegisterScriptCallback("load_state", load_state)
 end
