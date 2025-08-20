@@ -777,14 +777,17 @@ function raid_start_spawn(level_name)
 
 	end
 
+	local filteredSquads = {}
 	for squad_type, squad in pairs(spawned_squads) do
-		if string.find(squad_type, "stalker") or string.find(squad_type, "duty") or string.find(squad_type, "freedom") or string.find(squad_type, "csky") then
-			if not raid_squad_track then 
-				printf("SQUAD WILL BE " .. squad_type .. squad.id)
-				raid_squad_track_id = squad.id
-			end
-			break
+		if string.find(squad_type, "stalker") or string.find(squad_type, "duty") or string.find(squad_type, "freedom") or string.find(squad_type, "csky") or string.find(squad_type, "ecolog") then
+			table.insert(filteredSquads, squad)
 		end
+	end
+
+	if filteredSquads then
+		local squad = filteredSquads[math.random(1, #filteredSquads)]
+		raid_squad_track_id = squad.id
+		printf("# TRACKED SQUAD " .. squad:name() .. " " .. squad.id)
 	end
 
 	-- Mutant spawn
