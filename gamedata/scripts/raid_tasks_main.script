@@ -597,6 +597,23 @@ function load_state(m_data)
 	reset_time = m_data.raid_reset_time or reset_time
 end
 
+
+-- Simple direct hook (may need to be in correct load order)
+Crelease_body = release_body_manager.Crelease_body
+if Crelease_body and Crelease_body.can_release then
+    local original = Crelease_body.can_release
+    Crelease_body.can_release = function(self, obj)
+
+		local objId = obj:id()
+		local raid_squad_track_id = raid_simulation.raid_squad_track_id
+		if raid_squad_track_id and objId and objId == raid_squad_track_id then
+			return false
+		end
+
+        return original(self, obj)
+    end
+end
+
 function on_game_start()
 	RegisterScriptCallback("actor_on_update", reset_tasks_update)
 	RegisterScriptCallback("squad_on_npc_death", squad_on_npc_death)

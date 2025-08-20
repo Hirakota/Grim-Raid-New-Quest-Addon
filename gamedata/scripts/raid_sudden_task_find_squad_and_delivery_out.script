@@ -112,6 +112,7 @@ task_status_functor.raid_sudden_task_find_squad_and_delivery_out_status_functor 
 			for idx, smart_id in pairs(active_t[task_id].nearest_smart_ids) do
 				unmark_smart(smart_id)
 			end
+			raid_simulation.raid_squad_track_id = nil
 			active_t[task_id].ping_sound = false
 
 			tsk.stage = 2
