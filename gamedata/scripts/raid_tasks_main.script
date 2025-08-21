@@ -370,6 +370,12 @@ function end_raid_task(task_id, mode, reward)
 			raid_tasks_scout.unmark_smart(sm_id)
 		end
 	end
+	-- unmark in "find_squad_and_delivery_out"
+	if string.find(task_id, "find_squad_and_delivery_out") then
+		for idx, smart_id in pairs(active_t[task_id].nearest_smart_ids) do
+			raid_sudden_task_find_squad_and_delivery_out.unmark_smart(smart_id)
+		end
+	end
 
 	-- release unkilled squads
 	local release_t = {
@@ -484,7 +490,7 @@ function squad_on_npc_death(squad, se_obj, se_killer)
 	end
 
 	-- chance in 40% to not recive a quest
-	if math.random(1, 100) > 40 then
+	if math.random(1, 100) > 100 then
 		printf("# Roll failed to recive a quest")
 		raid_simulation.raid_squad_track_id = nil
 		return
@@ -607,6 +613,9 @@ if Crelease_body and Crelease_body.can_release then
 		local objId = obj:id()
 		local raid_squad_track_id = raid_simulation.raid_squad_track_id
 		if raid_squad_track_id and objId and objId == raid_squad_track_id then
+			local str = "---------------------------\n"
+			local info = "GC HOOK: prevent body with id " .. objId .. " from remove tackId: " .. raid_squad_track_id .. "\n"
+			log(str .. info .. str)
 			return false
 		end
 

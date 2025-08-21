@@ -193,24 +193,26 @@ function GetNearestSmartTerrain(position)
     end)
 
     -- Return top 2 closest
-    local result = {}
-    for i = 1, math.min(2, #smart_list) do
+	local result = {}
+    for i = 1, math.min(3, #smart_list) do
         table.insert(result, smart_list[i])
     end
 
-    return result
+
+
+    return {result[1], result[#result]}
 end
 
 function mark_smart(id, most_nearest)
-	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral") == 0 then
+	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral_cyan") == 0 then
 		local fromOrTo = most_nearest and "from" or "to"
-		level.map_add_object_spot_ser(id, "alife_presentation_general_base_neutral", gt("find_squad_and_delivery_out_task_moved_" .. fromOrTo .. "_mark")..": "..gt("st_"..alife_object(id):name().."_name")) 
+		level.map_add_object_spot_ser(id, "alife_presentation_general_base_neutral_cyan", gt("find_squad_and_delivery_out_task_moved_" .. fromOrTo .. "_mark")..": "..gt("st_"..alife_object(id):name().."_name")) 
 	end
 end
 
 function unmark_smart(id)
-	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral") ~= 0 then
-		level.map_remove_object_spot(id, "alife_presentation_general_base_neutral")
+	if level.map_has_object_spot(id, "alife_presentation_general_base_neutral_cyan") ~= 0 then
+		level.map_remove_object_spot(id, "alife_presentation_general_base_neutral_cyan")
 	end
 end
 
