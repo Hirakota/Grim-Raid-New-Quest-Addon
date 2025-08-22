@@ -866,9 +866,6 @@ function get_raid_task_title(task_id, stage, stage_max, special)
 	
 	if string.find(task_data.typ, "rf_scout_and_delivery_out") or string.find(task_data.typ, "rf_find_and_delivery_out") or false then 
 		local freq = task_data.target_freq
-
-		printf("string title name: %s : %s", "st_raid_task_" .. task_data.typ, gt("st_raid_task_" .. task_data.typ))
-
 		return strformat(gt("st_raid_task_" .. task_data.typ) .. hours_left_str, freq)
 	end
 

@@ -609,13 +609,14 @@ Crelease_body = release_body_manager.Crelease_body
 if Crelease_body and Crelease_body.can_release then
     local original = Crelease_body.can_release
     Crelease_body.can_release = function(self, obj)
-
 		local objId = obj:id()
 		local raid_squad_track_id = raid_simulation.raid_squad_track_id
 		if raid_squad_track_id and objId and objId == raid_squad_track_id then
 			local str = "---------------------------\n"
 			local info = "GC HOOK: prevent body with id " .. objId .. " from remove tackId: " .. raid_squad_track_id .. "\n"
-			log(str .. info .. str)
+			printf(str)
+			printf(info)
+			printf(str)
 			return false
 		end
 
